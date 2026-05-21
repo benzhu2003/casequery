@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+pgdata/
+data/zips/*
+data/logs/*
+!data/zips/.gitkeep
+!data/logs/.gitkeep
+.pytest_cache/
+.mypy_cache/
