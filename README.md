@@ -1,6 +1,8 @@
 # CaseQuery
 
-本项目用于把大批量裁判文书 CSV/ZIP 数据导入 PostgreSQL，并通过网页按字段和全文检索。
+Query legal cases published on the internet.
+
+CaseQuery 用于把大批量裁判文书 CSV/ZIP 数据导入 PostgreSQL，并通过网页按字段和全文检索。
 
 ## 技术栈
 
