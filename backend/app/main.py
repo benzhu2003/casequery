@@ -52,8 +52,26 @@ async def search(
     if field not in TEXT_COLUMNS:
         raise HTTPException(status_code=400, detail="Unsupported search field")
 
+    q_text = q.strip() if q else None
+    has_conditions = any(
+        [
+            q_text,
+            court,
+            region,
+            case_type,
+            trial_procedure,
+            cause,
+            judgment_from,
+            judgment_to,
+            publish_from,
+            publish_to,
+        ]
+    )
+    if not has_conditions:
+        return SearchResponse(total=0, page=page, page_size=page_size, results=[])
+
     sql, params = build_search_sql(
-        q=q.strip() if q else None,
+        q=q_text,
         field=field,
         court=court,
         region=region,
@@ -71,7 +89,7 @@ async def search(
         await cur.execute(sql, params)
         rows = await cur.fetchall()
 
-    is_keyword_search = bool(q and q.strip())
+    is_keyword_search = bool(q_text)
     has_more = False
     total_exact = True
     if is_keyword_search:

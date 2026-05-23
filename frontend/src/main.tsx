@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   CalendarDays,
@@ -89,6 +89,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [response, setResponse] = useState<SearchResponse>({ total: 0, page: 1, page_size: pageSize, results: [] });
+  const [hasSearched, setHasSearched] = useState(false);
   const [selected, setSelected] = useState<JudgmentDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -103,6 +104,25 @@ function App() {
       : `约 ${response.total.toLocaleString()} 条结果`;
 
   async function runSearch(nextPage = 1) {
+    const hasConditions = Boolean(
+      query.trim() ||
+        filters.court.trim() ||
+        filters.region.trim() ||
+        filters.case_type.trim() ||
+        filters.trial_procedure.trim() ||
+        filters.cause.trim() ||
+        filters.judgment_from ||
+        filters.judgment_to ||
+        filters.publish_from ||
+        filters.publish_to
+    );
+    if (!hasConditions) {
+      setHasSearched(false);
+      setResponse({ total: 0, page: 1, page_size: pageSize, results: [] });
+      setSelected(null);
+      setError("");
+      return;
+    }
     setLoading(true);
     setError("");
     setPage(nextPage);
@@ -117,6 +137,7 @@ function App() {
       const res = await fetch(`/api/search?${nextParams.toString()}`);
       if (!res.ok) throw new Error(await res.text());
       setResponse(await res.json());
+      setHasSearched(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "搜索失败");
     } finally {
@@ -137,10 +158,6 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    runSearch(1);
-  }, []);
-
   function updateFilter(name: keyof typeof filters, value: string) {
     setFilters((current) => ({ ...current, [name]: value }));
   }
@@ -160,6 +177,9 @@ function App() {
       publish_to: ""
     });
     setPage(1);
+    setHasSearched(false);
+    setResponse({ total: 0, page: 1, page_size: pageSize, results: [] });
+    setSelected(null);
   }
 
   return (
@@ -245,7 +265,7 @@ function App() {
           {loading && response.results.length === 0 ? (
             <div className="empty-state">加载中</div>
           ) : response.results.length === 0 ? (
-            <div className="empty-state">暂无结果</div>
+            <div className="empty-state">{hasSearched ? "暂无结果" : "请输入关键词或筛选条件"}</div>
           ) : (
             response.results.map((item) => (
               <article
