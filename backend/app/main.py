@@ -71,7 +71,16 @@ async def search(
         await cur.execute(sql, params)
         rows = await cur.fetchall()
 
-    total = int(rows[0][0]) if rows else 0
+    is_keyword_search = bool(q and q.strip())
+    has_more = False
+    total_exact = True
+    if is_keyword_search:
+        has_more = len(rows) > page_size
+        rows = rows[:page_size]
+        total = (page - 1) * page_size + len(rows) + (1 if has_more else 0)
+        total_exact = False
+    else:
+        total = int(rows[0][0]) if rows else 0
     results = [
         {
             "id": row[1],
@@ -90,7 +99,7 @@ async def search(
         }
         for row in rows
     ]
-    return SearchResponse(total=total, page=page, page_size=page_size, results=results)
+    return SearchResponse(total=total, page=page, page_size=page_size, total_exact=total_exact, has_more=has_more, results=results)
 
 
 @app.get("/api/judgments/{judgment_id}", response_model=JudgmentDetail)

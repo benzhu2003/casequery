@@ -39,7 +39,7 @@ def build_search_sql(
         text_parts = []
         for column in columns:
             params.append(q)
-            text_parts.append(f"COALESCE({column}, '') &@~ %s")
+            text_parts.append(f"{column} &@~ %s")
         where.append("(" + " OR ".join(text_parts) + ")")
 
     filters = [
@@ -67,6 +67,29 @@ def build_search_sql(
         snippet_sql = "array_to_string(pgroonga_snippet_html(COALESCE(full_text, ''), pgroonga_query_extract_keywords(%s), 220), ' ... ')"
     else:
         params_for_snippet = []
+
+    if q:
+        sql = f"""
+            SELECT
+                NULL::bigint AS total,
+                id,
+                source_url,
+                case_no,
+                case_name,
+                court,
+                region,
+                case_type,
+                trial_procedure,
+                judgment_date,
+                publish_date,
+                parties,
+                cause,
+                {snippet_sql} AS snippet
+            FROM judgments
+            WHERE {where_sql}
+            LIMIT %s OFFSET %s
+        """
+        return sql, params_for_snippet + params + [page_size + 1, offset]
 
     sql = f"""
         WITH matched AS (

@@ -23,6 +23,8 @@ class SearchResponse(BaseModel):
     total: int
     page: int
     page_size: int
+    total_exact: bool = True
+    has_more: bool = False
     results: list[SearchResult]
 
 

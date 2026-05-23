@@ -40,6 +40,8 @@ type SearchResponse = {
   total: number;
   page: number;
   page_size: number;
+  total_exact?: boolean;
+  has_more?: boolean;
   results: SearchResult[];
 };
 
@@ -90,7 +92,15 @@ function App() {
   const [selected, setSelected] = useState<JudgmentDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const totalPages = Math.max(1, Math.ceil(response.total / pageSize));
+  const totalExact = response.total_exact !== false;
+  const totalPages = totalExact
+    ? Math.max(1, Math.ceil(response.total / pageSize))
+    : page + (response.has_more ? 1 : 0);
+  const totalLabel = totalExact
+    ? `${response.total.toLocaleString()} 条结果`
+    : response.has_more
+      ? `已显示到第 ${page} 页，仍有更多结果`
+      : `约 ${response.total.toLocaleString()} 条结果`;
 
   async function runSearch(nextPage = 1) {
     setLoading(true);
@@ -225,7 +235,7 @@ function App() {
         {error && <div className="error-line">{error}</div>}
 
         <div className="result-meta">
-          <span>{response.total.toLocaleString()} 条结果</span>
+          <span>{totalLabel}</span>
           <span>
             第 {page} / {totalPages} 页
           </span>
