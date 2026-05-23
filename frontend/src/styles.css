@@ -251,8 +251,8 @@ select,
 .detail-pane {
   min-width: 0;
   max-height: 100vh;
-  overflow: auto;
-  padding: 26px;
+  overflow: hidden;
+  padding: 0;
   background: #eef3f0;
 }
 
@@ -272,19 +272,136 @@ select,
 }
 
 .judgment-view {
-  max-width: 1040px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 0;
 }
 
-.detail-head {
-  gap: 16px;
+.document-toolbar {
+  display: flex;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #d4ddd8;
+  padding: 18px 26px;
+  background: rgba(238, 243, 240, 0.96);
 }
 
-.detail-head h2 {
+.document-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  color: #1c3c3a;
+}
+
+.document-heading h2 {
   margin: 0;
-  font-size: 24px;
+  color: #18212f;
+  font-size: 20px;
   line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.document-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.document-chips span {
+  max-width: 100%;
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #52636a;
+  background: #f9faf7;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.document-paper {
+  flex: 1;
+  width: min(920px, calc(100% - 52px));
+  margin: 22px auto 0;
+  overflow: auto;
+  border: 1px solid #d8d6ce;
+  border-bottom: 0;
+  padding: 38px 52px 64px;
+  background: #fffefa;
+  box-shadow: 0 12px 28px rgba(24, 33, 47, 0.08);
+}
+
+.doc-line {
+  margin: 0 0 13px;
+  color: #1e2c34;
+  font-family: "Times New Roman", "SimSun", "Songti SC", serif;
+  font-size: 18px;
+  line-height: 1.95;
+  text-align: justify;
+  overflow-wrap: anywhere;
+}
+
+.doc-line.court {
+  margin-bottom: 4px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.doc-line.docType {
+  margin-bottom: 10px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.doc-line.caseNo {
+  margin-bottom: 24px;
+  color: #52636a;
+  font-size: 17px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.doc-line.section {
+  margin-top: 20px;
+  font-weight: 700;
+}
+
+.doc-line.party {
+  margin-bottom: 8px;
+}
+
+.doc-line.signature {
+  margin-bottom: 4px;
+  padding-right: 24px;
+  text-align: right;
+}
+
+.document-extra {
+  margin-top: 28px;
+  border-top: 1px solid #e1ded4;
+  padding-top: 14px;
+}
+
+.document-extra summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #23615b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.legal-basis {
+  margin: 14px 0 0;
+  color: #344148;
+  line-height: 1.8;
   overflow-wrap: anywhere;
 }
 
@@ -296,6 +413,12 @@ select,
   border-top: 1px solid #d6ddd8;
   border-bottom: 1px solid #d6ddd8;
   padding: 16px 0;
+}
+
+.meta-grid.compact {
+  margin: 14px 0 0;
+  border: 0;
+  padding: 0;
 }
 
 .meta-grid dt,
@@ -353,12 +476,53 @@ select,
   .detail-pane {
     max-height: none;
   }
+
+  .judgment-view {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .document-paper {
+    width: 100%;
+    margin-top: 0;
+    border-left: 0;
+    border-right: 0;
+  }
 }
 
 @media (max-width: 640px) {
   .search-pane,
   .detail-pane {
     padding: 14px;
+  }
+
+  .detail-pane {
+    padding: 0;
+  }
+
+  .document-toolbar {
+    padding: 14px;
+  }
+
+  .document-heading h2 {
+    font-size: 18px;
+  }
+
+  .document-paper {
+    padding: 26px 20px 44px;
+  }
+
+  .doc-line {
+    font-size: 17px;
+    line-height: 1.85;
+  }
+
+  .doc-line.court {
+    font-size: 21px;
+  }
+
+  .doc-line.docType {
+    font-size: 24px;
   }
 
   .query-row,

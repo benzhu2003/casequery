@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  BookOpen,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   FileSearch,
+  Info,
   Loader2,
   Search,
   X
@@ -41,6 +43,11 @@ type SearchResponse = {
   page: number;
   page_size: number;
   results: SearchResult[];
+};
+
+type DocumentLine = {
+  text: string;
+  kind: "court" | "docType" | "caseNo" | "section" | "party" | "signature" | "body";
 };
 
 const fields = [
@@ -302,35 +309,144 @@ function JudgmentView({ judgment }: { judgment: JudgmentDetail }) {
     ["来源", judgment.source],
     ["导入文件", judgment.import_file]
   ];
+  const lines = formatJudgmentText(judgment.full_text || "", judgment);
 
   return (
     <div className="judgment-view">
-      <div className="detail-head">
-        <h2>{judgment.case_name || judgment.case_no || `文书 ${judgment.id}`}</h2>
+      <div className="document-toolbar">
+        <div className="document-heading">
+          <BookOpen size={22} aria-hidden="true" />
+          <div>
+            <h2>{judgment.case_name || judgment.case_no || `文书 ${judgment.id}`}</h2>
+            <div className="document-chips">
+              <span>{judgment.case_no || "无案号"}</span>
+              <span>{judgment.court || "未知法院"}</span>
+              <span>{judgment.cause || "未知案由"}</span>
+              <span>{fmtDate(judgment.judgment_date)}</span>
+            </div>
+          </div>
+        </div>
         {judgment.source_url && (
           <a className="icon-button" href={judgment.source_url} target="_blank" rel="noreferrer" title="打开原始链接" aria-label="打开原始链接">
             <ExternalLink size={18} />
           </a>
         )}
       </div>
-      <dl className="meta-grid">
-        {meta.map(([label, value]) => (
-          <React.Fragment key={label}>
-            <dt>{label}</dt>
-            <dd>{value || "-"}</dd>
-          </React.Fragment>
+
+      <article className="document-paper" key={judgment.id}>
+        {lines.map((line, index) => (
+          <p className={`doc-line ${line.kind}`} key={`${line.kind}-${index}`}>
+            {line.text}
+          </p>
         ))}
-      </dl>
-      <section className="text-section">
-        <h3>法律依据</h3>
-        <p>{judgment.legal_basis || "-"}</p>
-      </section>
-      <section className="text-section fulltext">
-        <h3>全文</h3>
-        <p>{judgment.full_text || "-"}</p>
-      </section>
+
+        <details className="document-extra">
+          <summary>
+            <Info size={16} />
+            <span>文书信息</span>
+          </summary>
+          <dl className="meta-grid compact">
+            {meta.map(([label, value]) => (
+              <React.Fragment key={label}>
+                <dt>{label}</dt>
+                <dd>{value || "-"}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+        </details>
+
+        {judgment.legal_basis && (
+          <details className="document-extra">
+            <summary>
+              <Info size={16} />
+              <span>法律依据</span>
+            </summary>
+            <p className="legal-basis">{judgment.legal_basis}</p>
+          </details>
+        )}
+      </article>
     </div>
   );
+}
+
+function formatJudgmentText(text: string, judgment: JudgmentDetail): DocumentLine[] {
+  const normalized = normalizeDocumentText(text);
+  if (!normalized) {
+    return [{ text: "暂无全文", kind: "body" }];
+  }
+  const rawLines = splitDocumentLines(normalized);
+  const lines = rawLines.map((line) => ({ text: line, kind: classifyLine(line) }));
+
+  if (judgment.court && !lines.some((line) => line.kind === "court")) {
+    lines.unshift({ text: judgment.court, kind: "court" });
+  }
+  if (judgment.case_no && !lines.some((line) => line.kind === "caseNo")) {
+    const insertAt = lines[0]?.kind === "court" ? 1 : 0;
+    lines.splice(insertAt, 0, { text: judgment.case_no, kind: "caseNo" });
+  }
+  return lines;
+}
+
+function normalizeDocumentText(text: string) {
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\t/g, " ")
+    .replace(/[ ]{2,}/g, " ")
+    .replace(/\u3000{2,}/g, "\u3000")
+    .trim();
+}
+
+function splitDocumentLines(text: string) {
+  let formatted = text;
+  formatted = formatted.replace(/([\u4e00-\u9fa5]{2,50}人民法院)(民\s*事\s*判\s*决\s*书|民\s*事\s*裁\s*定\s*书|刑\s*事\s*判\s*决\s*书|刑\s*事\s*裁\s*定\s*书|行\s*政\s*判\s*决\s*书|行\s*政\s*裁\s*定\s*书|执\s*行\s*裁\s*定\s*书|民\s*事\s*调\s*解\s*书)/g, "$1\n$2");
+  formatted = formatted.replace(/(判\s*决\s*书|裁\s*定\s*书|调\s*解\s*书|决\s*定\s*书)(（[^）]{4,90}号)/g, "$1\n$2");
+  formatted = formatted.replace(/(本院认为|经审理查明|本院查明|经查明|经查|另查明|综上|依照|判决如下|裁定如下|调解如下|决定如下)/g, "\n$1");
+  formatted = formatted.replace(/(原告|被告|上诉人|被上诉人|申请人|被申请人|第三人|委托代理人|法定代表人)([^，。；\n]{0,50}[，。：])/g, "\n$1$2");
+  formatted = formatted.replace(/(审判长|审判员|代理审判员|人民陪审员|书记员|二[〇零一二三四五六七八九十]{2,}年|[0-9]{4}年)/g, "\n$1");
+
+  return formatted
+    .split(/\n+/)
+    .flatMap((line) => splitLongLine(line.trim()))
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function splitLongLine(line: string) {
+  if (line.length <= 150 || isHeadingLike(line)) {
+    return [line];
+  }
+  const parts = line.split(/(?<=。)/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length <= 1) {
+    return [line];
+  }
+  const chunks: string[] = [];
+  let current = "";
+  parts.forEach((part) => {
+    if ((current + part).length > 150 && current) {
+      chunks.push(current);
+      current = part;
+    } else {
+      current += part;
+    }
+  });
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function classifyLine(line: string): DocumentLine["kind"] {
+  const compact = line.replace(/\s/g, "");
+  if (/人民法院$/.test(compact) && compact.length <= 50) return "court";
+  if (/(判决书|裁定书|调解书|决定书)$/.test(compact) && compact.length <= 24) return "docType";
+  if (/^（[^）]{4,90}号$/.test(compact) || /^\([^)]{4,90}号$/.test(compact)) return "caseNo";
+  if (/^(本院认为|经审理查明|本院查明|经查明|经查|另查明|综上|依照|判决如下|裁定如下|调解如下|决定如下)/.test(line)) return "section";
+  if (/^(原告|被告|上诉人|被上诉人|申请人|被申请人|第三人|委托代理人|法定代表人)/.test(line)) return "party";
+  if (/^(审判长|审判员|代理审判员|人民陪审员|书记员|二[〇零一二三四五六七八九十]{2,}年|[0-9]{4}年)/.test(line)) return "signature";
+  return "body";
+}
+
+function isHeadingLike(line: string) {
+  return classifyLine(line) !== "body";
 }
 
 function Snippet({ html, value }: { html: boolean; value: string }) {
