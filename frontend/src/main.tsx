@@ -256,9 +256,23 @@ function App() {
 
         <div className="result-meta">
           <span>{totalLabel}</span>
-          <span>
-            第 {page} / {totalPages} 页
-          </span>
+          <div className="inline-pager">
+            <span>
+              第 {page} / {totalPages} 页
+            </span>
+            <button className="icon-button pager-button" disabled={page <= 1 || loading} onClick={() => runSearch(page - 1)} title="上一页" aria-label="上一页">
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              className="icon-button pager-button"
+              disabled={page >= totalPages || loading}
+              onClick={() => runSearch(page + 1)}
+              title="下一页"
+              aria-label="下一页"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
 
         <section className="results">
@@ -286,20 +300,6 @@ function App() {
           )}
         </section>
 
-        <footer className="pager">
-          <button className="icon-button" disabled={page <= 1 || loading} onClick={() => runSearch(page - 1)} title="上一页" aria-label="上一页">
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            className="icon-button"
-            disabled={page >= totalPages || loading}
-            onClick={() => runSearch(page + 1)}
-            title="下一页"
-            aria-label="下一页"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </footer>
       </section>
 
       <aside className="detail-pane">
