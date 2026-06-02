@@ -39,7 +39,7 @@ def build_search_sql(
         text_parts = []
         for column in columns:
             params.append(q)
-            text_parts.append(f"{column} &@~ %s")
+            text_parts.append(f"{column} &@~ pgroonga_query_escape(%s)")
         where.append("(" + " OR ".join(text_parts) + ")")
 
     filters = [
@@ -64,7 +64,7 @@ def build_search_sql(
     snippet_sql = "LEFT(full_text, 220)"
     if q:
         params_for_snippet = [q]
-        snippet_sql = "array_to_string(pgroonga_snippet_html(COALESCE(full_text, ''), pgroonga_query_extract_keywords(%s), 220), ' ... ')"
+        snippet_sql = "array_to_string(pgroonga_snippet_html(COALESCE(full_text, ''), pgroonga_query_extract_keywords(pgroonga_query_escape(%s)), 220), ' ... ')"
     else:
         params_for_snippet = []
 

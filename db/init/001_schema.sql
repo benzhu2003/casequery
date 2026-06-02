@@ -45,6 +45,8 @@ CREATE INDEX IF NOT EXISTS idx_judgments_publish_date ON judgments (publish_date
 
 CREATE INDEX IF NOT EXISTS idx_judgments_case_no_pgroonga ON judgments USING pgroonga (case_no);
 CREATE INDEX IF NOT EXISTS idx_judgments_case_name_pgroonga ON judgments USING pgroonga (case_name);
+CREATE INDEX IF NOT EXISTS idx_judgments_court_pgroonga ON judgments USING pgroonga (court);
+CREATE INDEX IF NOT EXISTS idx_judgments_region_pgroonga ON judgments USING pgroonga (region);
 CREATE INDEX IF NOT EXISTS idx_judgments_parties_pgroonga ON judgments USING pgroonga (parties);
 CREATE INDEX IF NOT EXISTS idx_judgments_cause_pgroonga ON judgments USING pgroonga (cause);
 CREATE INDEX IF NOT EXISTS idx_judgments_legal_basis_pgroonga ON judgments USING pgroonga (legal_basis);
