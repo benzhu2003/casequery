@@ -1,6 +1,7 @@
 import argparse
 import csv
 import hashlib
+import sys
 import zipfile
 from datetime import date
 from io import TextIOWrapper
@@ -11,6 +12,16 @@ import psycopg
 from psycopg.rows import dict_row
 
 from app.config import get_settings
+
+
+def set_csv_field_size_limit() -> None:
+    limit = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(limit)
+            return
+        except OverflowError:
+            limit //= 10
 
 
 FIELD_MAP = {
@@ -135,6 +146,22 @@ def start_run(conn: psycopg.Connection, file_path: Path, inner_file: str) -> int
         return int(cur.fetchone()["id"])
 
 
+def already_finished(conn: psycopg.Connection, file_path: Path, inner_file: str) -> bool:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT 1
+            FROM import_runs
+            WHERE file_path = %s
+              AND inner_file = %s
+              AND status = 'finished'
+            LIMIT 1
+            """,
+            (str(file_path), inner_file),
+        )
+        return cur.fetchone() is not None
+
+
 def finish_run(
     conn: psycopg.Connection,
     run_id: int,
@@ -160,11 +187,17 @@ def finish_run(
 
 def import_file(conn: psycopg.Connection, path: Path, batch_size: int) -> None:
     for inner_name, text_file in csv_sources(path):
-        run_id = start_run(conn, path, inner_name)
         rows_seen = 0
         rows_inserted = 0
         batch: list[dict[str, Any]] = []
         import_label = f"{path.name}:{inner_name}" if path.suffix.lower() == ".zip" else path.name
+        if already_finished(conn, path, inner_name):
+            print(f"Skipped {import_label}: already imported")
+            text_file.close()
+            continue
+
+        run_id = start_run(conn, path, inner_name)
+        conn.commit()
         try:
             reader = csv.DictReader(text_file)
             for row in reader:
@@ -190,6 +223,7 @@ def import_file(conn: psycopg.Connection, path: Path, batch_size: int) -> None:
 
 
 def main() -> None:
+    set_csv_field_size_limit()
     parser = argparse.ArgumentParser(description="Import judgment CSV files or ZIP archives.")
     parser.add_argument("paths", nargs="+", help="CSV/ZIP files or directories containing them.")
     parser.add_argument("--batch-size", type=int, default=3000)
