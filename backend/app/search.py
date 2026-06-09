@@ -43,8 +43,8 @@ def build_search_sql(
         where.append("(" + " OR ".join(text_parts) + ")")
 
     filters = [
-        ("court = %s", court),
-        ("region = %s", region),
+        ("court &@~ pgroonga_query_escape(%s)", court),
+        ("region &@~ pgroonga_query_escape(%s)", region),
         ("case_type = %s", case_type),
         ("trial_procedure = %s", trial_procedure),
         ("cause = %s", cause),
