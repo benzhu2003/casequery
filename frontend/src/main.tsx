@@ -232,8 +232,9 @@ function App() {
             placeholder="审理程序"
           />
           <input value={filters.cause} onChange={(event) => updateFilter("cause", event.target.value)} placeholder="案由" />
-          <label>
+          <label className="date-filter">
             <CalendarDays size={16} />
+            <span>裁判起</span>
             <input
               type="date"
               value={filters.judgment_from}
@@ -241,13 +242,34 @@ function App() {
               aria-label="裁判日期起"
             />
           </label>
-          <label>
+          <label className="date-filter">
             <CalendarDays size={16} />
+            <span>裁判止</span>
             <input
               type="date"
               value={filters.judgment_to}
               onChange={(event) => updateFilter("judgment_to", event.target.value)}
               aria-label="裁判日期止"
+            />
+          </label>
+          <label className="date-filter">
+            <CalendarDays size={16} />
+            <span>公开起</span>
+            <input
+              type="date"
+              value={filters.publish_from}
+              onChange={(event) => updateFilter("publish_from", event.target.value)}
+              aria-label="公开日期起"
+            />
+          </label>
+          <label className="date-filter">
+            <CalendarDays size={16} />
+            <span>公开止</span>
+            <input
+              type="date"
+              value={filters.publish_to}
+              onChange={(event) => updateFilter("publish_to", event.target.value)}
+              aria-label="公开日期止"
             />
           </label>
         </div>

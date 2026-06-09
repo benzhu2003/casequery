@@ -169,19 +169,26 @@ select,
 
 .filters {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 8px;
 }
 
-.filters > input:nth-child(5),
-.filters > label {
+.filters > input {
   grid-column: span 2;
+}
+
+.filters > input:nth-child(5) {
+  grid-column: span 4;
+}
+
+.filters > label {
+  grid-column: span 3;
 }
 
 .filters label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
   border: 1px solid #cfd6d3;
   border-radius: 8px;
@@ -191,10 +198,17 @@ select,
 }
 
 .filters label input {
-  width: 100%;
+  flex: 1;
+  width: auto;
   min-width: 0;
   border: 0;
   padding: 0;
+}
+
+.date-filter span {
+  flex: 0 0 auto;
+  color: #52636a;
+  white-space: nowrap;
 }
 
 .error-line {
@@ -412,6 +426,7 @@ select,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .filters > input,
   .filters > input:nth-child(5),
   .filters > label {
     grid-column: span 1;

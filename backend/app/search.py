@@ -45,9 +45,9 @@ def build_search_sql(
     filters = [
         ("court &@~ pgroonga_query_escape(%s)", court),
         ("region &@~ pgroonga_query_escape(%s)", region),
-        ("case_type = %s", case_type),
+        ("case_type &@~ pgroonga_query_escape(%s)", case_type),
         ("trial_procedure = %s", trial_procedure),
-        ("cause = %s", cause),
+        ("cause &@~ pgroonga_query_escape(%s)", cause),
         ("judgment_date >= %s", judgment_from),
         ("judgment_date <= %s", judgment_to),
         ("publish_date >= %s", publish_from),
